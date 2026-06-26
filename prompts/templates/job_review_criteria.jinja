@@ -1,0 +1,113 @@
+You are evaluating a resume against a specific job description. Analyze both documents carefully and provide a structured assessment.
+
+## SCORING CATEGORIES
+
+### 1. Keyword Match (0-25 points)
+Evaluate how well the resume's language aligns with the job description's requirements.
+
+**HIGH (20-25):** Resume mirrors JD terminology naturally; core technical terms, tools, frameworks, and methodologies from the JD appear throughout the resume with context.
+**MEDIUM (12-19):** Most important keywords present but some critical JD requirements are missing or only implied; some keyword stuffing without context.
+**LOW (5-11):** Significant keyword gaps; resume uses different terminology than the JD without bridging the gap.
+**VERY LOW (0-4):** Resume language is largely misaligned with JD requirements.
+
+### 2. Experience Relevance (0-25 points)
+How directly does the candidate's work history and projects map to the role?
+
+**HIGH (20-25):** Direct experience in the same domain/role; responsibilities closely mirror JD requirements; clear career progression toward this role.
+**MEDIUM (12-19):** Related experience with transferable skills; some responsibilities align but others are tangential; career trajectory is somewhat aligned.
+**LOW (5-11):** Experience is in a different domain; transferable skills exist but require significant reframing; career pivot scenario.
+**VERY LOW (0-4):** Very little overlap between experience and JD requirements.
+
+### 3. Skills Alignment (0-20 points)
+Technical and soft skills match between resume and JD.
+
+**HIGH (16-20):** All required skills present; most preferred skills present; skills demonstrated through projects/experience, not just listed.
+**MEDIUM (10-15):** Most required skills present; some preferred skills missing; skills are listed but not always demonstrated.
+**LOW (5-9):** Several required skills missing; few preferred skills present; skill claims lack supporting evidence.
+**VERY LOW (0-4):** Major required skills are absent.
+
+### 4. Impact Quantification (0-15 points)
+Use of metrics, numbers, and measurable achievements.
+
+**HIGH (12-15):** Most bullet points include metrics (%, $, users, time saved, etc.); achievements are specific and measurable; results clearly tied to actions.
+**MEDIUM (7-11):** Some metrics present but inconsistent; mix of quantified and vague achievements; some bullet points describe responsibilities instead of results.
+**LOW (3-6):** Few or no metrics; mostly responsibility-focused rather than achievement-focused; vague language ("improved," "helped," "worked on").
+**VERY LOW (0-2):** No quantification; purely duty-based descriptions.
+
+### 5. Presentation Quality (0-15 points)
+Structure, clarity, and ATS-friendliness of the resume.
+
+**HIGH (12-15):** Clean, scannable format; standard section headers; strong action verbs; concise bullet points; consistent formatting; ATS-friendly structure.
+**MEDIUM (7-11):** Mostly well-structured but some issues (inconsistent formatting, some weak verbs, minor ATS concerns).
+**LOW (3-6):** Significant formatting issues; non-standard sections; walls of text; poor ATS compatibility.
+**VERY LOW (0-2):** Major structural problems; would likely fail ATS parsing.
+
+## ANALYSIS INSTRUCTIONS
+
+1. Read the job description thoroughly — identify ALL required skills, preferred skills, responsibilities, and qualifications.
+2. Read the resume thoroughly — map each section against the JD requirements.
+3. Perform keyword extraction from the JD and check each keyword against the resume.
+4. For each resume section, assess its relevance and quality relative to the target role.
+5. Generate specific, actionable improvement suggestions (not generic advice).
+
+## OUTPUT STRUCTURE
+
+Respond with ONLY this JSON structure. ALL fields are required:
+
+{
+    "overall_score": 0,
+    "keyword_match": {"score": 0, "max": 25, "evidence": "string"},
+    "experience_relevance": {"score": 0, "max": 25, "evidence": "string"},
+    "skills_alignment": {"score": 0, "max": 20, "evidence": "string"},
+    "impact_quantification": {"score": 0, "max": 15, "evidence": "string"},
+    "presentation_quality": {"score": 0, "max": 15, "evidence": "string"},
+    "keyword_analysis": {
+        "missing_keywords": ["keyword1", "keyword2"],
+        "strong_matches": ["match1", "match2"],
+        "partial_matches": ["partial1", "partial2"]
+    },
+    "section_reviews": [
+        {
+            "section": "Section Name",
+            "score": "Strong|Moderate|Weak",
+            "feedback": "What works well in this section",
+            "suggestion": "Specific improvement suggestion"
+        }
+    ],
+    "top_improvements": [
+        "Most impactful improvement suggestion 1",
+        "Most impactful improvement suggestion 2",
+        "Most impactful improvement suggestion 3",
+        "Most impactful improvement suggestion 4",
+        "Most impactful improvement suggestion 5"
+    ],
+    "ats_notes": [
+        "ATS compatibility observation 1",
+        "ATS compatibility observation 2"
+    ],
+    "llm_rewrite_prompt": "A pre-built prompt that can be fed to another LLM to rewrite the resume. This should include the job description context, missing keywords, weak sections, and specific instructions for improvement."
+}
+
+**CONSTRAINTS:**
+- overall_score must equal the sum of all five category scores (0-100 range)
+- All evidence fields must be non-empty strings with specific observations
+- section_reviews should cover: Summary/Objective, Work Experience, Skills, Projects, Education (and any other sections present)
+- top_improvements: exactly 5 items, ordered by impact (most impactful first)
+- ats_notes: 2-5 items
+- llm_rewrite_prompt: Must be a complete, self-contained prompt that another LLM can use to rewrite the resume. Include the target role, missing keywords, weak areas, and what to preserve.
+- missing_keywords: Only include keywords that are genuinely important for the role
+- strong_matches: Highlight the resume's best alignments with the JD
+
+**DO NOT include any text outside the JSON. DO NOT wrap in markdown code blocks.**
+
+---
+
+## JOB DESCRIPTION:
+
+{{ job_description }}
+
+---
+
+## RESUME:
+
+{{ resume_text }}

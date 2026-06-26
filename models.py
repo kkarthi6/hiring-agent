@@ -8,6 +8,7 @@ class ModelProvider(Enum):
 
     OLLAMA = "ollama"
     GEMINI = "gemini"
+    OPENAI_COMPATIBLE = "openai_compatible"
 
 
 @runtime_checkable
@@ -389,3 +390,111 @@ class GeminiProvider:
                     f"Retrying in {sleep_time}s..."
                 )
                 time.sleep(sleep_time)
+
+
+class OpenAICompatibleProvider:
+    """
+    OpenAI-compatible API provider implementation.
+
+    Works with any server that implements the OpenAI chat completions API,
+    including LM Studio, AnythingLLM, Ollama (OpenAI mode), vLLM,
+    text-generation-webui, etc.
+    """
+
+    def __init__(self, base_url: str, api_key: str = "not-needed"):
+        from openai import OpenAI
+
+        self.client = OpenAI(
+            base_url=base_url,
+            api_key=api_key,
+        )
+
+    def chat(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        options: Dict[str, Any] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Send a chat request to an OpenAI-compatible API."""
+
+        # Build generation parameters
+        gen_params = {}
+        if options:
+            if "temperature" in options:
+                gen_params["temperature"] = options["temperature"]
+            if "top_p" in options:
+                gen_params["top_p"] = options["top_p"]
+
+        # Handle JSON schema format if provided (structured output)
+        response_format = None
+        if "format" in kwargs and kwargs["format"]:
+            # Some OpenAI-compatible servers support JSON mode
+            response_format = {"type": "json_object"}
+
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                response_format=response_format,
+                **gen_params,
+            )
+
+            content = response.choices[0].message.content
+
+            # Return in the same format as OllamaProvider for compatibility
+            return {"message": {"role": "assistant", "content": content}}
+
+        except Exception as e:
+            print(f"[OpenAICompatibleProvider] Error: {e}")
+            raise
+
+
+# ── Resume Review Models (for job-description-aware evaluation) ──────────
+
+
+class KeywordAnalysis(BaseModel):
+    """Analysis of keyword overlap between resume and job description."""
+
+    missing_keywords: List[str] = Field(
+        description="JD keywords not found in the resume"
+    )
+    strong_matches: List[str] = Field(
+        description="Resume elements that strongly match JD requirements"
+    )
+    partial_matches: List[str] = Field(
+        description="Weak or indirect keyword matches"
+    )
+
+
+class SectionReview(BaseModel):
+    """Review of a single resume section against the job description."""
+
+    section: str = Field(description="Section name, e.g. 'Work Experience'")
+    score: str = Field(description="Rating: Strong, Moderate, or Weak")
+    feedback: str = Field(description="What works well in this section")
+    suggestion: str = Field(description="Specific improvement suggestion")
+
+
+class ResumeReview(BaseModel):
+    """Complete structured review of a resume against a job description."""
+
+    overall_score: float = Field(ge=0, le=100, description="Total score out of 100")
+    keyword_match: CategoryScore
+    experience_relevance: CategoryScore
+    skills_alignment: CategoryScore
+    impact_quantification: CategoryScore
+    presentation_quality: CategoryScore
+    keyword_analysis: KeywordAnalysis
+    section_reviews: List[SectionReview] = Field(min_length=1)
+    top_improvements: List[str] = Field(
+        min_length=1, max_length=5, description="Top 5 actionable improvements"
+    )
+    ats_notes: List[str] = Field(
+        min_length=1, max_length=5, description="ATS compatibility observations"
+    )
+    llm_rewrite_prompt: str = Field(
+        min_length=1,
+        description="Pre-built prompt for feeding to another LLM to rewrite the resume",
+    )
+

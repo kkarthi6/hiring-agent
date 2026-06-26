@@ -45,6 +45,8 @@ class TemplateManager:
             "github_project_selection": "github_project_selection.jinja",
             "resume_evaluation_criteria": "resume_evaluation_criteria.jinja",
             "resume_evaluation_system_message": "resume_evaluation_system_message.jinja",
+            "job_review_criteria": "job_review_criteria.jinja",
+            "job_review_system_message": "job_review_system_message.jinja",
         }
 
         for section_name, filename in template_files.items():

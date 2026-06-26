@@ -65,3 +65,18 @@ MODEL_PROVIDER_MAPPING = {
 
 # Get API keys from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+# OpenAI-compatible provider settings (for LM Studio, AnythingLLM, etc.)
+OPENAI_COMPATIBLE_BASE_URL = os.getenv(
+    "OPENAI_COMPATIBLE_BASE_URL", "http://localhost:1234/v1"
+)
+OPENAI_COMPATIBLE_API_KEY = os.getenv("OPENAI_COMPATIBLE_API_KEY", "not-needed")
+
+# When the LLM_PROVIDER env var is set to "openai_compatible", dynamically
+# register the DEFAULT_MODEL so initialize_llm_provider picks the right class.
+if PROVIDER == ModelProvider.OPENAI_COMPATIBLE.value:
+    MODEL_PROVIDER_MAPPING[DEFAULT_MODEL] = ModelProvider.OPENAI_COMPATIBLE
+    # Set sensible defaults if the model isn't already in MODEL_PARAMETERS
+    if DEFAULT_MODEL not in MODEL_PARAMETERS:
+        MODEL_PARAMETERS[DEFAULT_MODEL] = {"temperature": 0.1, "top_p": 0.9}
+
