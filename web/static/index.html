@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Reviewer — AI-Powered Resume Analysis</title>
+    <meta name="description" content="Evaluate your resume against any job description using a local AI. Get scores, keyword gaps, and actionable improvements.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">📊</span>
+                <h1>Resume Reviewer</h1>
+            </div>
+            <div class="header-badge" id="statusBadge">
+                <span class="status-dot"></span>
+                <span class="status-text">Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Main Content ────────────────────────────────────── -->
+    <main class="container">
+
+        <!-- INPUT VIEW -->
+        <section id="inputView" class="view active">
+            <div class="hero">
+                <h2>Evaluate your resume against any job description</h2>
+                <p>Upload your resume, paste a job description, and get a comprehensive AI-powered review with scores, keyword gaps, and actionable improvements — all running locally on your machine.</p>
+            </div>
+
+            <form id="reviewForm" class="review-form">
+                <!-- Resume Upload -->
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">📄</span>
+                        Resume PDF
+                    </label>
+                    <div class="file-upload" id="dropZone">
+                        <input type="file" id="resumeFile" accept=".pdf" hidden>
+                        <div class="upload-content" id="uploadContent">
+                            <span class="upload-icon">⬆️</span>
+                            <p class="upload-text">Drop your resume here or <span class="upload-link">browse</span></p>
+                            <p class="upload-hint">PDF files only</p>
+                        </div>
+                        <div class="upload-success" id="uploadSuccess" hidden>
+                            <span class="success-icon">✅</span>
+                            <p class="file-name" id="fileName"></p>
+                            <button type="button" class="btn-clear" id="clearFile">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Description -->
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">💼</span>
+                        Job Description
+                    </label>
+
+                    <div class="jd-tabs">
+                        <button type="button" class="tab active" data-tab="text">Paste Text</button>
+                        <button type="button" class="tab" data-tab="url">From URL</button>
+                    </div>
+
+                    <div class="tab-content active" id="tabText">
+                        <textarea
+                            id="jobText"
+                            class="jd-textarea"
+                            placeholder="Paste the full job description here...&#10;&#10;Include the role title, responsibilities, required qualifications, and preferred skills for the best analysis."
+                            rows="10"
+                        ></textarea>
+                    </div>
+
+                    <div class="tab-content" id="tabUrl">
+                        <input
+                            type="url"
+                            id="jobUrl"
+                            class="jd-url-input"
+                            placeholder="https://boards.greenhouse.io/company/jobs/12345"
+                        >
+                        <p class="input-hint">Supports LinkedIn, Greenhouse, Lever, Workday, and most job boards</p>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-submit" id="submitBtn" disabled>
+                    <span class="btn-icon">🔍</span>
+                    Analyze Resume
+                </button>
+            </form>
+        </section>
+
+        <!-- LOADING VIEW -->
+        <section id="loadingView" class="view">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <h2 class="loading-title">Analyzing your resume...</h2>
+                <div class="loading-steps">
+                    <div class="step" id="step1">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Loading job description</span>
+                    </div>
+                    <div class="step" id="step2">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Extracting resume data</span>
+                    </div>
+                    <div class="step" id="step3">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Running AI evaluation</span>
+                    </div>
+                </div>
+                <p class="loading-hint">This takes 1–2 minutes depending on your model. Your data stays on your machine.</p>
+            </div>
+        </section>
+
+        <!-- RESULTS VIEW -->
+        <section id="resultsView" class="view">
+            <!-- Score Hero -->
+            <div class="score-hero" id="scoreHero">
+                <div class="score-ring-container">
+                    <svg class="score-ring" viewBox="0 0 120 120">
+                        <circle class="score-ring-bg" cx="60" cy="60" r="52" />
+                        <circle class="score-ring-fill" id="scoreRingFill" cx="60" cy="60" r="52" />
+                    </svg>
+                    <div class="score-value" id="scoreValue">—</div>
+                </div>
+                <div class="score-details">
+                    <h2 id="scoreLabel">Overall Score</h2>
+                    <p id="scoreDescription" class="score-description"></p>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="results-section">
+                <h3 class="section-title">📈 Category Breakdown</h3>
+                <div class="categories" id="categoriesGrid"></div>
+            </div>
+
+            <!-- Keyword Analysis -->
+            <div class="results-section">
+                <h3 class="section-title">🔑 Keyword Analysis</h3>
+                <div class="keyword-grid" id="keywordGrid"></div>
+            </div>
+
+            <!-- Section Reviews -->
+            <div class="results-section">
+                <h3 class="section-title">📝 Section-by-Section Review</h3>
+                <div class="section-reviews" id="sectionReviews"></div>
+            </div>
+
+            <!-- Top Improvements -->
+            <div class="results-section">
+                <h3 class="section-title">🚀 Top Improvements</h3>
+                <ol class="improvements-list" id="improvementsList"></ol>
+            </div>
+
+            <!-- ATS Notes -->
+            <div class="results-section">
+                <h3 class="section-title">🤖 ATS Compatibility</h3>
+                <ul class="ats-list" id="atsList"></ul>
+            </div>
+
+            <!-- LLM Rewrite Prompt -->
+            <div class="results-section rewrite-section">
+                <h3 class="section-title">✨ Ready-to-Use LLM Rewrite Prompt</h3>
+                <p class="rewrite-hint">Copy this prompt and paste it into any LLM (ChatGPT, Claude, etc.) along with your resume to get an optimized version.</p>
+                <div class="rewrite-prompt-container">
+                    <pre class="rewrite-prompt" id="rewritePrompt"></pre>
+                    <button class="btn-copy" id="copyPromptBtn" title="Copy to clipboard">
+                        <span class="copy-icon">📋</span>
+                        <span class="copy-text">Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="results-actions">
+                <button class="btn-secondary" id="downloadReportBtn">
+                    <span>📥</span> Download Report
+                </button>
+                <button class="btn-secondary" id="newReviewBtn">
+                    <span>🔄</span> New Review
+                </button>
+            </div>
+        </section>
+
+        <!-- ERROR VIEW -->
+        <section id="errorView" class="view">
+            <div class="error-container">
+                <span class="error-icon">❌</span>
+                <h2>Something went wrong</h2>
+                <p class="error-message" id="errorMessage"></p>
+                <button class="btn-secondary" id="retryBtn">
+                    <span>🔄</span> Try Again
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <footer class="app-footer">
+        <p>All processing happens locally on your machine. No data is sent to any cloud service.</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
