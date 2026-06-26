@@ -433,12 +433,15 @@ class OpenAICompatibleProvider:
             response_format = {"type": "json_object"}
 
         try:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                response_format=response_format,
+            call_kwargs = {
+                "model": model,
+                "messages": messages,
                 **gen_params,
-            )
+            }
+            if response_format is not None:
+                call_kwargs["response_format"] = response_format
+
+            response = self.client.chat.completions.create(**call_kwargs)
             content = response.choices[0].message.content
             return {"message": {"role": "assistant", "content": content}}
 
