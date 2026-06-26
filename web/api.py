@@ -87,7 +87,14 @@ async def health_check():
 
     # Try to ping the LLM provider
     try:
-        engine = ResumeReviewEngine(model_name=DEFAULT_MODEL)
+        from llm_utils import initialize_llm_provider
+        provider = initialize_llm_provider(DEFAULT_MODEL)
+        # Send a tiny ping
+        provider.chat(
+            model=DEFAULT_MODEL,
+            messages=[{"role": "user", "content": "ping"}],
+            options={"temperature": 0.1},
+        )
         status["llm_connected"] = True
     except Exception as e:
         status["llm_connected"] = False
@@ -143,6 +150,21 @@ async def run_review(
             raise HTTPException(status_code=400, detail=f"Job description error: {e}")
 
         logger.info(f"✅ JD loaded ({len(jd_text)} chars)")
+
+        # Verify LLM connection before extraction to provide clear error message
+        try:
+            from llm_utils import initialize_llm_provider
+            test_provider = initialize_llm_provider(DEFAULT_MODEL)
+            test_provider.chat(
+                model=DEFAULT_MODEL,
+                messages=[{"role": "user", "content": "ping"}],
+                options={"temperature": 0.1},
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to connect to the LLM provider ({DEFAULT_MODEL}). Ensure your local LLM server is running and configured correctly. Details: {str(e)}",
+            )
 
         # Step 2: Extract resume
         logger.info("⏳ Step 2/3: Extracting resume...")

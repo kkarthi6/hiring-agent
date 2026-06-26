@@ -439,17 +439,27 @@ class OpenAICompatibleProvider:
                 response_format=response_format,
                 **gen_params,
             )
-
             content = response.choices[0].message.content
-
-            # Return in the same format as OllamaProvider for compatibility
             return {"message": {"role": "assistant", "content": content}}
 
         except Exception as e:
-            print(f"[OpenAICompatibleProvider] Error: {e}")
-            raise
-
-
+            # Fallback for servers that reject response_format={"type": "json_object"}
+            if response_format and "400" in str(e):
+                print(f"[OpenAICompatibleProvider] JSON mode rejected, retrying without response_format. Error: {e}")
+                try:
+                    response = self.client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        **gen_params,
+                    )
+                    content = response.choices[0].message.content
+                    return {"message": {"role": "assistant", "content": content}}
+                except Exception as retry_e:
+                    print(f"[OpenAICompatibleProvider] Retry Error: {retry_e}")
+                    raise retry_e
+            else:
+                print(f"[OpenAICompatibleProvider] Error: {e}")
+                raise
 # ── Resume Review Models (for job-description-aware evaluation) ──────────
 
 

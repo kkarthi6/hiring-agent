@@ -289,14 +289,13 @@ class PDFHandler:
         for section_name in sections:
             section_data = self._extract_section_data(text_content, section_name)
 
-            if section_data:
+            if section_data is not None:
                 complete_resume.update(section_data)
                 logger.debug(f"✅ Successfully extracted {section_name} section")
             else:
-                logger.error(
-                    f"⚠️ Failed to extract {section_name} section. Aborting extraction to prevent partial/invalid resume data."
+                logger.warning(
+                    f"⚠️ Failed to extract {section_name} section. Skipping this section."
                 )
-                return None
 
         try:
             if complete_resume.get("basics") and isinstance(
